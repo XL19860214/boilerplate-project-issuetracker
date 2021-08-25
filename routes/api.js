@@ -12,7 +12,7 @@ module.exports = function (app) {
       let project = req.params.project;
       const find = Object.assign({ project }, req.query)
       Issue.find(find)
-           .select('-project')
+           .select('-project -__v')
            .exec((error, issues) => {
              res.json(issues);
            });
@@ -37,19 +37,16 @@ module.exports = function (app) {
       });
       issue.created_on = new Date();
       issue.updated_on = new Date();
-      if (req.body.assigned_to) {
-        issue.assigned_to = req.body.assigned_to;
-      }
+      issue.assigned_to = req.body.assigned_to !== undefined ? req.body.assigned_to : '';
       issue.open = true;
-      if (req.body.status_text) {
-        issue.status_text = req.body.status_text;
-      }
+      issue.status_text = req.body.status_text !== undefined ? req.body.status_text : '';
 
       // console.log(`app.route('/api/issues/:project').post()::issue`, issue); // DEBUG
 
       issue.save(err => {
         if (!err) {
           issue.project = undefined;
+          issue.__v = undefined;
           res.json(issue);
         }
       });
@@ -72,10 +69,11 @@ module.exports = function (app) {
       if (Object.keys($set).length === 0) {
         return res.json({ error: 'no update field(s) sent', '_id': _id });
       }
-      $set.updated_at = new Date();
+      $set.updated_on = new Date();
 
-      Issue.findOneAndUpdate({ _id }, { $set }, error => {
-        if (error) {
+      Issue.findOneAndUpdate({ _id }, { $set }, { new: true }, (error, issue) => {
+        // console.log(`issue`, issue); // DEBUG
+        if (error || !issue) {
           res.json({ error: 'could not update', '_id': _id });
         } else {
           res.json({
@@ -92,8 +90,8 @@ module.exports = function (app) {
       if (!_id) {
         return res.json({ error: 'missing _id' });
       }
-      Issue.deleteOne({ _id }, null, error => {
-        if (error) {
+      Issue.findOneAndDelete({ _id }, (error, issue) => {
+        if (error || !issue) {
           res.json({ error: 'could not delete', '_id': _id });
         } else {
           res.json({ result: 'successfully deleted', '_id': _id });

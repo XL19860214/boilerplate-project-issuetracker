@@ -342,24 +342,44 @@ suite('Functional Tests', function() {
   });
 
   // #12
-  // TODO _id
   test('Delete an issue: DELETE request to /api/issues/{project}', done => {
-    const _id = '612676c089cf06d40c00953f';
+    const newIssue = {
+      issue_title: lorem.generateWords(Math.ceil(Math.random() * 10)),
+      issue_text: lorem.generateParagraphs(Math.ceil(Math.random() * 5)),
+      created_by: humanNames.allRandom()
+    }
+    let _id;
     const result = 'successfully deleted';
-
-    chai.request(server)
-        .delete('/api/issues/apitest')
-        .type('form')
-        .send({
-          _id
-        })
-        .end((err, res) => {
-          assert.equal(res.status, 200);
-          const resObject = JSON.parse(res.text);
-          assert.equal(resObject.result, result);
-          assert.equal(resObject._id, _id);
-          done();
-        });
+    
+    async.series([
+      callback => {
+        chai.request(server)
+            .post('/api/issues/apitest')
+            .type('form')
+            .send(newIssue)
+            .end((err, res) => {
+              _id = JSON.parse(res.text)._id;
+              callback();
+            });
+      },
+      callback => {
+        chai.request(server)
+          .delete('/api/issues/apitest')
+          .type('form')
+          .send({
+            _id
+          })
+          .end((err, res) => {
+            assert.equal(res.status, 200);
+            const resObject = JSON.parse(res.text);
+            assert.equal(resObject.result, result);
+            assert.equal(resObject._id, _id);
+            callback();
+          });
+      }
+    ], (error, results) => {
+      done();
+    })
   });
 
   // #13
