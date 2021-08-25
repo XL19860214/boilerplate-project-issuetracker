@@ -20,6 +20,14 @@ const lorem = new LoremIpsum({
 
 const humanNames = require('human-names');
 
+const _ = require('lodash');
+
+const async = require('async');
+
+
+// ======================================================================================
+// 
+
 suite('Functional Tests', function() {
   // #1
   test('Create an issue with every field: POST request to /api/issues/{project}', done => {
@@ -176,6 +184,7 @@ suite('Functional Tests', function() {
   });
 
   // #7
+  // TODO Optimize _id
   test('Update one field on an issue: PUT request to /api/issues/{project}', done => {
     const _id = '6126761e97cecfd35de357b2';
     const result = 'successfully updated';
@@ -207,6 +216,53 @@ suite('Functional Tests', function() {
           done();
         });
   });
+
+  // #8
+  test('Update multiple fields on an issue: PUT request to /api/issues/{project}', done => {
+    const _id = '6126761e97cecfd35de357b2';
+    const result = 'successfully updated';
+    const possibleFields = {
+      issue_title: lorem.generateWords(Math.ceil(Math.random() * 10)),
+      issue_text: lorem.generateParagraphs(Math.ceil(Math.random() * 5)),
+      created_by: humanNames.allRandom(),
+      assigned_to: humanNames.allRandom(),
+      status_text: lorem.generateSentences(1),
+      // open: Math.random() >= 0.5 ? true : false
+      open: 'false'
+    };
+    const keys = Object.keys(possibleFields);
+
+    let i = 2;
+    async.whilst(
+      cb => cb(null, i < keys.length),
+      callback => {
+        const inputKeys = _.take(keys, i);
+        const send = Object.assign({_id}, _.pick(possibleFields, inputKeys))
+        chai.request(server)
+            .put('/api/issues/apitest')
+            .type('form')
+            .send(send)
+            .end((err, res) => {
+              assert.equal(res.status, 200);
+              const resObject = JSON.parse(res.text);
+              assert.equal(resObject.result, result);
+              assert.equal(resObject._id, _id);
+              i++;
+              // console.log(i, send, resObject); // DEBUG
+              callback(null, i);
+            });
+      },
+      (err, n) => {
+        if (!err && n === keys.length) {
+          done();
+        }
+      }
+    );
+
+
+  });
+
+
 
   
   
