@@ -115,6 +115,7 @@ suite('Functional Tests', function() {
   });
 
   // #5
+  // TODO Optimize
   test('View issues on a project with one filter: GET request to /api/issues/{project}', done => {
     const openOrClosed = Math.random() >= 0.5 ? true : false;
 
@@ -136,13 +137,14 @@ suite('Functional Tests', function() {
               'created_by',
               'open'
             ]);
-            assert.equal(issue.open, openOrClosed);
+            assert.strictEqual(issue.open, openOrClosed);
           });
           done();
         });
   });
 
   // #6
+  // TODO Optimize
   test('View issues on a project with multiple filters: GET request to /api/issues/{project}', done => {
     const openOrClosed = Math.random() >= 0.5 ? true : false;
     const created_by = 'XL';
@@ -166,12 +168,47 @@ suite('Functional Tests', function() {
               'created_by',
               'open'
             ]);
-            assert.equal(issue.open, openOrClosed);
+            assert.strictEqual(issue.open, openOrClosed);
             assert.equal(issue.created_by, created_by);
           });
           done();
         });
   });
+
+  // #7
+  test('Update one field on an issue: PUT request to /api/issues/{project}', done => {
+    const _id = '6126761e97cecfd35de357b2';
+    const result = 'successfully updated';
+    const possibleFields = {
+      issue_title: lorem.generateWords(Math.ceil(Math.random() * 10)),
+      issue_text: lorem.generateParagraphs(Math.ceil(Math.random() * 5)),
+      created_by: humanNames.allRandom(),
+      assigned_to: humanNames.allRandom(),
+      status_text: lorem.generateSentences(1),
+      // open: Math.random() >= 0.5 ? true : false
+      open: 'false'
+    };
+
+    const keys = Object.keys(possibleFields);
+    const key = keys[Math.floor(Math.random() * keys.length)];
+
+    chai.request(server)
+        .put('/api/issues/apitest')
+        .type('form')
+        .send({
+          _id,
+          [key]: possibleFields[key]
+        })
+        .end((err, res) => {
+          assert.equal(res.status, 200);
+          const resObject = JSON.parse(res.text);
+          assert.equal(resObject.result, result);
+          assert.equal(resObject._id, _id);
+          done();
+        });
+  });
+
+  
   
 
 });
