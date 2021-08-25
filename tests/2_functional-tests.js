@@ -76,6 +76,9 @@ suite('Functional Tests', function() {
       issue_text: Math.random() >= 0.5 ? lorem.generateParagraphs(Math.ceil(Math.random() * 5)) : undefined,
       created_by: Math.random() >= 0.5 ? humanNames.allRandom() : undefined
     }
+    if (Object.keys(testObject).length === 3) {
+      delete testObject.created_by;
+    }
 
     chai.request(server)
         .post('/api/issues/apitest')
@@ -111,5 +114,33 @@ suite('Functional Tests', function() {
         });
   });
 
+  // #5
+  test('View issues on a project with one filter: GET request to /api/issues/{project}', done => {
+    const openOrClosed = Math.random() >= 0.5 ? true : false;
+
+    chai.request(server)
+        .get('/api/issues/apitest')
+        .query({
+          open: openOrClosed
+        })
+        .send()
+        .end((err, res) => {
+          assert.equal(res.status, 200);
+          const resObjects = JSON.parse(res.text);
+          assert.isArray(resObjects);
+          resObjects.forEach(issue => {
+            assert.containsAllKeys(issue, [
+              '_id',
+              'issue_title',
+              'issue_text',
+              'created_by',
+              'open'
+            ]);
+            assert.equal(issue.open, openOrClosed);
+          });
+          done();
+        });
+  });
+  
 
 });

@@ -24,7 +24,7 @@ module.exports = function (app) {
       // console.log(`app.route('/api/issues/:project').post()::req.body`, req.body); // DEBUG
       const { issue_title, issue_text, created_by } = req.body;
       if (!issue_title || !issue_text || !created_by) {
-        res.json({
+        return res.json({
           error: 'required field(s) missing'
         });
       }
@@ -57,9 +57,10 @@ module.exports = function (app) {
     
     .put(function (req, res){
       let project = req.params.project;
-      const { _id, issue_title, issue_text, created_by, assigned_to, status_text, open: closed } = req.body;
+      // console.log(`req.body`, req.body); // DEBUG
+      const { _id, issue_title, issue_text, created_by, assigned_to, status_text, open } = req.body;
       if (!_id) {
-        res.json({ error: 'missing _id' });
+        return res.json({ error: 'missing _id' });
       }
       const $set = {};
       if (issue_title) $set.issue_title = issue_title;
@@ -67,9 +68,9 @@ module.exports = function (app) {
       if (created_by) $set.created_by = created_by;
       if (assigned_to) $set.assigned_to = assigned_to;
       if (status_text) $set.status_text = status_text;
-      if (typeof closed === 'boolean') $set.open = !closed;
+      if (open) $set.open = open; // QUESTION Use string ?
       if (Object.keys($set).length === 0) {
-        res.json({ error: 'no update field(s) sent', '_id': _id });
+        return res.json({ error: 'no update field(s) sent', '_id': _id });
       }
       $set.updated_at = new Date();
 
@@ -89,7 +90,7 @@ module.exports = function (app) {
       let project = req.params.project;
       const { _id } = req.body;
       if (!_id) {
-        res.json({ error: 'missing _id' });
+        return res.json({ error: 'missing _id' });
       }
       Issue.deleteOne({ _id }, null, error => {
         if (error) {
