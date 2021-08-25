@@ -307,6 +307,42 @@ suite('Functional Tests', function() {
           done();
         });
   });
+
+  // #11
+  test('Update an issue with an invalid _id: PUT request to /api/issues/{project}', done => {
+    const _id = 'sdfkjasdkfjaslkdfl';
+    const error = 'could not update';
+    const possibleFields = {
+      issue_title: lorem.generateWords(Math.ceil(Math.random() * 10)),
+      issue_text: lorem.generateParagraphs(Math.ceil(Math.random() * 5)),
+      created_by: humanNames.allRandom(),
+      assigned_to: humanNames.allRandom(),
+      status_text: lorem.generateSentences(1),
+      // open: Math.random() >= 0.5 ? true : false
+      open: 'false'
+    };
+
+    const keys = Object.keys(possibleFields);
+    const key = keys[Math.floor(Math.random() * keys.length)];
+
+    chai.request(server)
+        .put('/api/issues/apitest')
+        .type('form')
+        .send({
+          _id,
+          [key]: possibleFields[key]
+        })
+        .end((err, res) => {
+          assert.equal(res.status, 200);
+          const resObject = JSON.parse(res.text);
+          assert.equal(resObject.error, error);
+          assert.equal(resObject._id, _id);
+          done();
+        });
+  });
+
+
+  
   
 
 });
