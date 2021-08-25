@@ -341,8 +341,63 @@ suite('Functional Tests', function() {
         });
   });
 
+  // #12
+  // TODO _id
+  test('Delete an issue: DELETE request to /api/issues/{project}', done => {
+    const _id = '612676c089cf06d40c00953f';
+    const result = 'successfully deleted';
 
-  
+    chai.request(server)
+        .delete('/api/issues/apitest')
+        .type('form')
+        .send({
+          _id
+        })
+        .end((err, res) => {
+          assert.equal(res.status, 200);
+          const resObject = JSON.parse(res.text);
+          assert.equal(resObject.result, result);
+          assert.equal(resObject._id, _id);
+          done();
+        });
+  });
+
+  // #13
+  test('Delete an issue with an invalid _id: DELETE request to /api/issues/{project}', done => {
+    const _id = 'sdfsdfjsklfjasidjfio';
+    const error = 'could not delete';
+
+    chai.request(server)
+        .delete('/api/issues/apitest')
+        .type('form')
+        .send({
+          _id
+        })
+        .end((err, res) => {
+          assert.equal(res.status, 200);
+          const resObject = JSON.parse(res.text);
+          assert.equal(resObject.error, error);
+          assert.equal(resObject._id, _id);
+          done();
+        });
+  });
+
+
+  // #14
+  test('Delete an issue with missing _id: DELETE request to /api/issues/{project}', done => {
+    const error = 'missing _id';
+
+    chai.request(server)
+        .delete('/api/issues/apitest')
+        .type('form')
+        .send({})
+        .end((err, res) => {
+          assert.equal(res.status, 200);
+          const resObject = JSON.parse(res.text);
+          assert.equal(resObject.error, error);
+          done();
+        });
+  });
   
 
 });
