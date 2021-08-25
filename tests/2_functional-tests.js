@@ -289,7 +289,24 @@ suite('Functional Tests', function() {
         });
   });
   
-  
+  // #10
+  test('Update an issue with no fields to update: PUT request to /api/issues/{project}', done => {
+    const _id = '6126761e97cecfd35de357b2';
+    const error = 'no update field(s) sent';
+
+    chai.request(server)
+        .put('/api/issues/apitest')
+        .type('form')
+        .send({
+          _id
+        })
+        .end((err, res) => {
+          assert.equal(res.status, 200);
+          const resObject = JSON.parse(res.text);
+          assert.equal(resObject.error, error);
+          done();
+        });
+  });
   
 
 });
