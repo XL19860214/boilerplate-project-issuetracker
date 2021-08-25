@@ -141,6 +141,37 @@ suite('Functional Tests', function() {
           done();
         });
   });
+
+  // #6
+  test('View issues on a project with multiple filters: GET request to /api/issues/{project}', done => {
+    const openOrClosed = Math.random() >= 0.5 ? true : false;
+    const created_by = 'XL';
+
+    chai.request(server)
+        .get('/api/issues/apitest')
+        .query({
+          open: openOrClosed,
+          created_by
+        })
+        .send()
+        .end((err, res) => {
+          assert.equal(res.status, 200);
+          const resObjects = JSON.parse(res.text);
+          assert.isArray(resObjects);
+          resObjects.forEach(issue => {
+            assert.containsAllKeys(issue, [
+              '_id',
+              'issue_title',
+              'issue_text',
+              'created_by',
+              'open'
+            ]);
+            assert.equal(issue.open, openOrClosed);
+            assert.equal(issue.created_by, created_by);
+          });
+          done();
+        });
+  });
   
 
 });
